@@ -6,26 +6,70 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useEffect, useState } from 'react';
+import { auth } from '../firebase';
+import { useNavigation } from '@react-navigation/native';
+
 const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const navigation = useNavigation()
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        navigation.navigate('Home');
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  const handleSignUp = () => {
+    auth
+      .createUserWithEmailAndPassword(email, password)
+      .then((userCredentials) => {
+        const user = userCredentials.user;
+        console.log('Registered with:', user.email);
+      })
+      .catch((e) => console.error(e.message));
+  };
+
+  const handleLogin = () => {
+    auth
+      .signInWithEmailAndPassword(email, password)
+      .then((userCredentials) => {
+        const user = userCredentials.user;
+        console.log('Logged in with:', user.email);
+      })
+      .catch((e) => console.error(e.message));
+  };
+
   return (
     <KeyboardAvoidingView style={styles.container} behavior="padding">
       <View style={styles.inputContainer}>
-        <TextInput placeholder="Email" style={styles.input} />
-
+        <TextInput
+          placeholder="Email"
+          style={styles.input}
+          value={email}
+          onChangeText={(text) => setEmail(text)}
+        />
         <TextInput
           placeholder="Password"
           style={styles.input}
           secureTextEntry
+          value={password}
+          onChangeText={(text) => setPassword(text)}
         />
       </View>
 
       <View style={styles.buttonContainer}>
-        <Pressable onPress={() => {}} style={styles.button}>
+        <Pressable onPress={handleLogin} style={styles.button}>
           <Text style={styles.buttonText}>Login</Text>
         </Pressable>
 
         <Pressable
-          onPress={() => {}}
+          onPress={handleSignUp}
           style={[styles.button, styles.buttonOutline]}
         >
           <Text style={styles.buttonOutlineText}>Register</Text>
@@ -74,7 +118,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: '700',
-    
   },
   buttonOutlineText: {
     color: '#0782F9',
